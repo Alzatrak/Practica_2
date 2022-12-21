@@ -1,1 +1,141 @@
+---
+title: 'PRACTICA 2 - Tipologia i cicle de vida de les dades'
+author: "Autor: Lidia Toda i Sergi Garcia"
+date: "Desembre 2022"
+output:
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+  word_document: default
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+El dataset ens ofereix informació de 303 pacients amb 14 variables:
+
+1. age : Age of the patient
+2. sex : Sex of the patient
+3. cp : Chest Pain type chest pain type
+    Value 1: typical angina
+    Value 2: atypical angina
+    Value 3: non-anginal pain
+    Value 4: asymptomatic
+4. trtbps : resting blood pressure (in mm Hg)
+5. chol : cholestoral in mg/dl fetched via BMI sensor
+6. fbs : (fasting blood sugar > 120 mg/dl) (1 = true; 0 = false)
+7. rest_ecg : resting electrocardiographic results
+    Value 0: normal
+    Value 1: having ST-T wave abnormality (T wave inversions and/or ST elevation or depression of > 0.05 mV)
+    Value 2: showing probable or definite left ventricular hypertrophy by Estes' criteria
+8. thalach : maximum heart rate achieved
+9. exang: exercise induced angina (1 = yes; 0 = no)
+10. oldpeak: previous peak
+11. slp: slope
+12. caa: number of major vessels (0-3)
+13. thall: thal rate
+14. output : 0= less chance of heart attack 1= more chance of heart attack
+
+El nostre objectiu serà realitzar la neteja de dades per establir visualitzacions que ens permetin interpretar de manera fàcil el contingut i obtindre informació de quines son les variables més influents alhora de desenvolupar un atac de cor.
+De la mateixa manera, intentarem realitzar predicions sobre noves incorporacions de dades.
+
+
+Llegim el dataset
+```{r}
+data <- read.csv("heart.csv")
+```
+
+
+Imprimim les primeres linies del data
+```{r}
+head(data)
+```
+
+Obtenim informació de rows i columns.
+```{r}
+nombre_rows <- nrow(data)
+nombre_columnes <- ncol(data)
+cat("El nombre de files és de", nombre_rows, "i el nombre de columnes és de", nombre_columnes)
+```
+
+Obtenim informació bàsica de les variables
+```{r}
+summary(data)
+```
+
+Llegim la tipologia de data de les variables
+```{r}
+str(data)
+```
+
+Comprovem si hi han valors "na" en el doc.
+```{r}
+sum(is.na(data))
+```
+
+Comprovem si existeixen valors duplicats al dataset
+```{r}
+duplicats <- duplicated(data)
+print(sum(duplicats))
+```
+
+Eliminem files duplicades
+```{r}
+data <- unique(data)
+```
+
+Obtenim informació de les noves rows i columns.
+```{r}
+nombre_rows <- nrow(data)
+nombre_columnes <- ncol(data)
+cat("El nombre de files és de", nombre_rows, "i el nombre de columnes és de", nombre_columnes)
+```
+
+
+Carreguem llibreries.
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+g <- ggplot(data, aes(x = output), ggtitle("Absentism times by reason categories"))
+g + geom_histogram(bins=3)
+```
+```{r}
+output_plot <-ggplot(data,aes(output)) + geom_bar() + labs(x="output", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de output del dataset")
+output_plot
+```
+
+
+```{r}
+output0 <- sum(data$output == 0)
+output1 <- sum(data$output == 1)
+percentatge_output0 = (output0/nombre_rows)
+percentatge_output1 = (output1/nombre_rows)
+cat("El percentatge de pacients amb output positiu és de", percentatge_output1, "mentre que el percentatge de pacients amb output negatius és de", percentatge_output0)
+```
+
+Busquem valors outliers en les columnes trtbps, thalachh, chol i oldpeak.
+```{r}
+trtbps <- boxplot(data$trtbps)
+thalachh <- boxplot(data$thalachh)
+chol <- boxplot(data$chol)
+oldpeak <- boxplot(data$oldpeak)
+```
+
+```{r}
+trtbps170 <- sum(data$trtbps >= 170)
+thalachh90 <- sum(data$thalachh <= 90)
+oldpeak_4 <- sum(data$oldpeak >= 4)
+cat("La suma de files amb outliers a la columna trtbps és de", trtbps170, "\n")
+cat("La suma de les files amb outliers a la columna thalachh és de", thalachh90, "\n")
+cat("La suma de les files amb outliers a la columna oldpeak és de", oldpeak_4, "\n")
+```
