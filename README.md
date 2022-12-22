@@ -10,6 +10,7 @@ Lidia Toda Adell i Sergi Garcia Marsol
 
 # Dataset
 Pot trobar la informació del dataset al següent enllaç:
+
 https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
 
 # Llicència
