@@ -19,6 +19,15 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Carreguem llibreries.
+```{r}
+library(ggplot2)
+library(knitr)
+```
+
+
+# Descripció del dataset
+
 El dataset ens ofereix informació de 303 pacients amb 14 variables:
 
 1. age : Age of the patient
@@ -52,7 +61,6 @@ Llegim el dataset
 data <- read.csv("heart.csv")
 ```
 
-
 Imprimim les primeres linies del data
 ```{r}
 head(data)
@@ -72,8 +80,66 @@ summary(data)
 
 Llegim la tipologia de data de les variables
 ```{r}
-str(data)
+variables <- sapply(data,class)
+kable(data.frame(variables=names(variables),clase=as.vector(variables)))
 ```
+
+
+# Visualització de les variables
+
+Observem la distribució de la columna output
+```{r}
+output_plot <-ggplot(data,aes(output)) + geom_bar() + labs(x="output", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de output del dataset")
+output_plot
+```
+
+
+```{r}
+output0 <- sum(data$output == 0)
+output1 <- sum(data$output == 1)
+percentatge_output0 = (output0/nombre_rows)
+percentatge_output1 = (output1/nombre_rows)
+cat("El percentatge de pacients amb output positiu és de", percentatge_output1, "mentre que el percentatge de pacients amb output negatius és de", percentatge_output0)
+```
+
+Observem la distribució de la columna age
+```{r}
+age_plot <-ggplot(data,aes(age)) + geom_bar() + labs(x="age", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de age del dataset")
+age_plot
+```
+
+Observem la distribució de la columna sex
+```{r}
+sex_plot <-ggplot(data,aes(sex)) + geom_bar() + labs(x="sex", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de sex del dataset")
+sex_plot
+```
+
+Observem la distribució de la columna trtbps
+```{r}
+trtbps_plot <-ggplot(data,aes(trtbps)) + geom_bar() + labs(x="trtbps", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de trtbps del dataset")
+trtbps_plot
+```
+
+Observem la distribució de la columna chol
+```{r}
+chol_plot <-ggplot(data,aes(chol)) + geom_bar() + labs(x="chol", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de chol del dataset")
+chol_plot
+```
+
+Observem la distribució de la columna thalachh
+```{r}
+thalachh_plot <-ggplot(data,aes(thalachh)) + geom_bar() + labs(x="thalachh", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de thalachh del dataset")
+thalachh_plot
+```
+
+Observem la distribució de la columna oldpeak
+```{r}
+oldpeak_plot <-ggplot(data,aes(oldpeak)) + geom_bar() + labs(x="oldpeak", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de oldpeak del dataset")
+oldpeak_plot
+```
+
+
+# Neteja de dades (valors nuls i outliers)
 
 Comprovem si hi han valors "na" en el doc.
 ```{r}
@@ -99,30 +165,6 @@ cat("El nombre de files és de", nombre_rows, "i el nombre de columnes és de", 
 ```
 
 
-Carreguem llibreries.
-
-```{r}
-library(ggplot2)
-```
-
-```{r}
-g <- ggplot(data, aes(x = output), ggtitle("Absentism times by reason categories"))
-g + geom_histogram(bins=3)
-```
-```{r}
-output_plot <-ggplot(data,aes(output)) + geom_bar() + labs(x="output", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de output del dataset")
-output_plot
-```
-
-
-```{r}
-output0 <- sum(data$output == 0)
-output1 <- sum(data$output == 1)
-percentatge_output0 = (output0/nombre_rows)
-percentatge_output1 = (output1/nombre_rows)
-cat("El percentatge de pacients amb output positiu és de", percentatge_output1, "mentre que el percentatge de pacients amb output negatius és de", percentatge_output0)
-```
-
 Busquem valors outliers en les columnes trtbps, thalachh, chol i oldpeak.
 ```{r}
 trtbps <- boxplot(data$trtbps)
@@ -134,8 +176,57 @@ oldpeak <- boxplot(data$oldpeak)
 ```{r}
 trtbps170 <- sum(data$trtbps >= 170)
 thalachh90 <- sum(data$thalachh <= 90)
+chol350 <- sum(data$chol >= 350)
 oldpeak_4 <- sum(data$oldpeak >= 4)
 cat("La suma de files amb outliers a la columna trtbps és de", trtbps170, "\n")
 cat("La suma de les files amb outliers a la columna thalachh és de", thalachh90, "\n")
+cat("La suma de les files amb outliers a la columna chol és de", chol350, "\n")
 cat("La suma de les files amb outliers a la columna oldpeak és de", oldpeak_4, "\n")
 ```
+Eliminem els outliers del data
+```{r}
+data <- subset(data, trtbps <= 170)
+data <- subset(data, thalachh >= 90)
+data <- subset(data, chol <= 350)
+data <- subset(data, oldpeak <= 4)
+```
+
+Imprimim una taula de correlacions
+```{r}
+taula_correlacions <- round(cor(data), 2)
+print(taula_correlacions)
+```
+Podem observar que la major correlació negativa amb output és oldpeak i la major correlació positiva cp i thalachh.
+
+
+# Normalitat de dades
+
+```{r}
+shapiro_age <- shapiro.test(data$age)
+shapiro_trtbps <- shapiro.test(data$trtbps)
+shapiro_chol <- shapiro.test(data$chol)
+shapiro_thalachh <- shapiro.test(data$thalachh)
+shapiro_oldpeak <- shapiro.test(data$oldpeak)
+print(shapiro_age)
+print(shapiro_trtbps)
+print(shapiro_chol)
+print(shapiro_thalachh)
+print(shapiro_oldpeak)
+taula <- matrix(c("0.01067", "0.003466", "0.1485", "6.43e-05", "1.54e-15"),ncol=5,byrow=TRUE)
+colnames(taula) <- c("age","trtbps", "chol", "thalachh", "oldpeak")
+rownames(taula) <- c("pvalue")
+taula <- as.table(taula)
+taula <- kable(taula)
+taula
+```
+Veiem com la variable chol manté normalitat de dades, les demés no.
+Per altra banda, s’ha de tenir en compte el teorema del límit central que demostra que les mitjanes de mostres suficientment grans segueixen una distribució gairebé normal malgrat que la distribució de la població no sigui normal, i que a major mida de les mostres, la distribució s’aproxima més a una distribució normal.
+
+
+# Model lineal
+
+```{r}
+output_to_vars <- lm(output ~ age + sex + cp + trtbps + chol + fbs + restecg + thalachh + exng + oldpeak + slp + caa + thall, data)
+summary(output_to_vars)
+```
+Veiem mitjançant la funció lm que les variables amb major explicació sobre la variable output son sex, cp i caa. 
