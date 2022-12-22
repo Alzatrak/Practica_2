@@ -225,8 +225,27 @@ Per altra banda, s’ha de tenir en compte el teorema del límit central que dem
 
 # Model lineal
 
+Veiem mitjançant la funció lm que les variables amb major explicació sobre la variable output son sex, cp i caa. El model no és massa bo donat el Rsquared de 0.48. No obstant això intentarem predir noves incorporacions
+
 ```{r}
-output_to_vars <- lm(output ~ age + sex + cp + trtbps + chol + fbs + restecg + thalachh + exng + oldpeak + slp + caa + thall, data)
+ntrain <- nrow(data)*0.8
+ntest <- nrow(data)*0.2
+set.seed(1)
+index_train<-sample(1:nrow(data),size = ntrain)
+train<-data[index_train,]
+test<-data[-index_train,]
+model <- lm(output ~ age + sex + cp + trtbps + chol + fbs + restecg + thalachh + exng + oldpeak + slp + caa + thall, data=train)
 summary(output_to_vars)
 ```
-Veiem mitjançant la funció lm que les variables amb major explicació sobre la variable output son sex, cp i caa. 
+Veiem mitjançant la funció lm que les variables amb major explicació sobre la variable output son sex, cp i caa. El model no és massa bo donat el Rsquared de 0.50 No obstant això intentarem predir noves incorporacions
+
+```{r}
+prob_output <- predict(model, test, type="response")
+taula_prediccio<-data.frame(
+  real=test$output,
+  predicted= ifelse(prob_output>0.5, 1, 0),
+  dif=ifelse(prob_output>0.5&test$output==1, "No", "Si")
+  )
+colnames(mc_sl)<-c("Real","Predicció","Diferencia?")
+kable(taula_prediccio)
+```
