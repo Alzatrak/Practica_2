@@ -8,6 +8,9 @@ Màster en ciència de dades
 # Autors
 Lidia Toda Adell i Sergi Garcia Marsol
 
+# Consultora
+Mireia Calvo González
+
 # Dataset
 Pot trobar la informació del dataset al següent enllaç:
 
