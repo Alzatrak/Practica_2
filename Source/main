@@ -3,16 +3,16 @@ title: 'PRACTICA 2 - Tipologia i cicle de vida de les dades'
 author: "Autor: Lidia Toda i Sergi Garcia"
 date: "Desembre 2022"
 output:
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+  word_document: default
   html_document:
     highlight: default
     number_sections: yes
     theme: cosmo
     toc: yes
     toc_depth: 2
-  word_document: default
-  pdf_document:
-    highlight: zenburn
-    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -23,6 +23,7 @@ Carreguem llibreries.
 ```{r}
 library(ggplot2)
 library(knitr)
+library(corrplot)
 ```
 
 
@@ -89,7 +90,7 @@ kable(data.frame(variables=names(variables),clase=as.vector(variables)))
 
 Observem la distribució de la columna output
 ```{r}
-output_plot <-ggplot(data,aes(output)) + geom_bar() + labs(x="output", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de output del dataset")
+output_plot <-ggplot(data,aes(output)) + geom_bar() + labs(x="output", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("DistribuciÃ³ de output del dataset")
 output_plot
 ```
 
@@ -97,14 +98,14 @@ output_plot
 ```{r}
 output0 <- sum(data$output == 0)
 output1 <- sum(data$output == 1)
-percentatge_output0 = (output0/nombre_rows)
-percentatge_output1 = (output1/nombre_rows)
+percentatge_output0 = (output0/nombre_rows)*100
+percentatge_output1 = (output1/nombre_rows)*100
 cat("El percentatge de pacients amb output positiu és de", percentatge_output1, "mentre que el percentatge de pacients amb output negatius és de", percentatge_output0)
 ```
 
 Observem la distribució de la columna age
 ```{r}
-age_plot <-ggplot(data,aes(age)) + geom_bar() + labs(x="age", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de age del dataset")
+age_plot <-ggplot(data,aes(age)) + geom_bar() + labs(x="age", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("DistribuciÃ³ de age del dataset")
 age_plot
 ```
 
@@ -112,6 +113,14 @@ Observem la distribució de la columna sex
 ```{r}
 sex_plot <-ggplot(data,aes(sex)) + geom_bar() + labs(x="sex", y="Count") + guides(fill=guide_legend(title="")) + ggtitle("Distribució de sex del dataset")
 sex_plot
+```
+
+```{r}
+sex0 <- sum(data$sex == 0)
+sex1 <- sum(data$sex == 1)
+percentatge_sex0 = (sex0/nombre_rows)*100
+percentatge_sex1 = (sex1/nombre_rows)*100
+cat("El percentatge de pacients dones Ã©s de", percentatge_sex1, "mentre que el percentatge de pacients amb output homes Ã©s de", percentatge_sex0)
 ```
 
 Observem la distribució de la columna trtbps
@@ -164,7 +173,6 @@ nombre_columnes <- ncol(data)
 cat("El nombre de files és de", nombre_rows, "i el nombre de columnes és de", nombre_columnes)
 ```
 
-
 Busquem valors outliers en les columnes trtbps, thalachh, chol i oldpeak.
 ```{r}
 trtbps <- boxplot(data$trtbps)
@@ -183,12 +191,19 @@ cat("La suma de les files amb outliers a la columna thalachh és de", thalachh90
 cat("La suma de les files amb outliers a la columna chol és de", chol350, "\n")
 cat("La suma de les files amb outliers a la columna oldpeak és de", oldpeak_4, "\n")
 ```
+
 Eliminem els outliers del data
 ```{r}
 data <- subset(data, trtbps <= 170)
 data <- subset(data, thalachh >= 90)
 data <- subset(data, chol <= 350)
 data <- subset(data, oldpeak <= 4)
+```
+
+```{r}
+nombre_rows <- nrow(data)
+nombre_columnes <- ncol(data)
+cat("El nombre de files és de", nombre_rows, "i el nombre de columnes és de", nombre_columnes)
 ```
 
 Imprimim una taula de correlacions
@@ -212,7 +227,7 @@ print(shapiro_trtbps)
 print(shapiro_chol)
 print(shapiro_thalachh)
 print(shapiro_oldpeak)
-taula <- matrix(c("0.01067", "0.003466", "0.1485", "6.43e-05", "1.54e-15"),ncol=5,byrow=TRUE)
+taula <- matrix(c("0.0203", "0.003591", "0.1485", "7.648e-05", "1.42e-15"),ncol=5,byrow=TRUE)
 colnames(taula) <- c("age","trtbps", "chol", "thalachh", "oldpeak")
 rownames(taula) <- c("pvalue")
 taula <- as.table(taula)
@@ -225,7 +240,6 @@ Per altra banda, s’ha de tenir en compte el teorema del límit central que dem
 
 # Model lineal
 
-Veiem mitjançant la funció lm que les variables amb major explicació sobre la variable output son sex, cp i caa. El model no és massa bo donat el Rsquared de 0.48. No obstant això intentarem predir noves incorporacions
 
 ```{r}
 ntrain <- nrow(data)*0.8
@@ -235,17 +249,105 @@ index_train<-sample(1:nrow(data),size = ntrain)
 train<-data[index_train,]
 test<-data[-index_train,]
 model <- lm(output ~ age + sex + cp + trtbps + chol + fbs + restecg + thalachh + exng + oldpeak + slp + caa + thall, data=train)
-summary(output_to_vars)
+summary(model)
 ```
-Veiem mitjançant la funció lm que les variables amb major explicació sobre la variable output son sex, cp i caa. El model no és massa bo donat el Rsquared de 0.50 No obstant això intentarem predir noves incorporacions
+
+Ens quedem nomès amb les que tenen coeficients significatius
+```{r}
+model1 <- lm(output ~ sex + cp + thalachh + exng + oldpeak + caa + thall, data=train)
+summary(model1)
+```
+
+Veiem mitjançant la funció lm que les variables amb major explicació sobre la variable output son sex, cp i caa. El model no és massa bo donat el Rsquared de 0.48. No obstant això intentarem predir noves incorporacions
 
 ```{r}
-prob_output <- predict(model, test, type="response")
-taula_prediccio<-data.frame(
+prob_output <- predict(model1, test, type="response")
+mc_sl<-data.frame(
   real=test$output,
   predicted= ifelse(prob_output>0.5, 1, 0),
-  dif=ifelse(prob_output>0.5&test$output==1, "No", "Si")
+  dif=ifelse(prob_output>0.5&test$output==1, "No", ifelse(prob_output<0.5&test$output==0, "No", "Si"))
   )
-colnames(mc_sl)<-c("Real","Predicció","Diferencia?")
-kable(taula_prediccio)
+colnames(mc_sl)<-c("Real","PredicciÃ³","Diferencia?")
+kable(mc_sl)
+```
+
+```{r}
+count <- sum(mc_sl$`Diferencia?`=="No")
+total <- nrow(mc_sl)
+resultat <- (count/total)
+resultat <- round(resultat,2)
+cat("El total de resultats correctes ha estat del", resultat*100, "%")
+```
+# Anàlisis i correlacions
+
+```{r}
+str(data)
+```
+
+```{r}
+table(data$output, data$sex)
+summary(table(data$output, data$sex))
+```
+
+```{r}
+table(data$fbs, data$sex)
+summary(table(data$fbs, data$sex))
+```
+
+```{r}
+table(data$cp, data$sex)
+summary(table(data$cp, data$sex))
+```
+
+```{r}
+table(data$restecg  , data$sex)
+summary(table(data$restecg, data$sex))
+```
+
+```{r}
+test <- fisher.test(table(data$restecg , data$sex))
+test
+```
+
+```{r}
+table(data$slp , data$sex)
+summary(table(data$slp, data$sex))
+```
+
+```{r}
+test <- fisher.test(table(data$slp , data$sex))
+test
+```
+
+```{r}
+table(data$thall  , data$sex)
+summary(table(data$thall, data$sex))
+test <- fisher.test(table(data$thall , data$sex))
+test
+```
+
+```{r}
+table(data$exng , data$sex)
+summary(table(data$exng, data$sex))
+```
+
+```{r}
+aggregate(chol~sex, data = data, FUN = var)
+```
+
+```{r}
+var.test(x = data[data$sex == 0, "chol"],
+         y = data[data$sex == 1, "chol"] )
+```
+
+```{r}
+trtbps <- boxplot(data$trtbps ~ data$sex)
+thalachh <- boxplot(data$thalachh ~ data$sex)
+chol <- boxplot(data$chol ~ data$sex)
+oldpeak <- boxplot(data$oldpeak ~ data$sex)
+```
+
+```{r}
+corr.res<-cor(data)
+corrplot(corr.res,method="circle")
 ```
